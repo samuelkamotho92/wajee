@@ -1,22 +1,24 @@
+const { query } = require("express");
 const roomsbooked = require("../model/booking");
-
-const getRoomsbooked = async (req,resp)=>{
-try{
-    const booked = await roomsbooked.find();
+const Queryoperetions = require("../utility/features");
+const catchAsyncfunc = require("../utility/catchAsync");
+const catchAsyncFunc = require("../utility/catchAsyncFunc");
+const Apperror = require("../utility/appError");
+//call the catchAsyncfunc to catch the error
+const getRoomsbooked = catchAsyncfunc(async (req,resp,next)=>{
+   const features = new Queryoperetions(roomsbooked.find(),queryString)
+   .filter()
+   .sort()
+   .pagination()
+   .limit()
+   const booked = await features.queryData;
     resp.status(200).json({
         status:"success",
         message:booked
     });
-}catch(err){
-resp.status(400).json({
-    status:"fail",
-    message:err.message
 })
-}
-}
 
-const postRoom = async (req,resp)=>{
-    try{
+const postRoom = catchAsyncFunc(async (req,resp)=>{
 const {name,rating,price} = req.body;
 const booked = await roomsbooked.create(req.body);
 resp.status(201).json({
@@ -24,67 +26,51 @@ resp.status(201).json({
     message:booked
 }) 
 console.log(req.body);
-}catch(err){
-        resp.status(404).json({
-            status:"fail",
-            message:err.message
-        }) 
-        console.log(err.message);
-    }
-}
+})
 
-const getaRoom = async (req,resp)=>{
-    try{
+const getaRoom =  catchAsyncFunc(async (req,resp,next)=>{
     const id = req.params.id;
-    console.log(id);
     const oneroom = await roomsbooked.findById(id);
-    console.log(oneroom)
+    if(!oneroom){
+        //create an error object
+        return next(new Apperror(`cant find room with id ${id}`,404));
+    }
     resp.status(200).json({
         status:"success",
         message:oneroom
     })
-    }catch(err){
-console.log("room cannot be found")
-  }
-    }
+    })
   
 
-  const updateRoom = async (req,resp)=>{
-    try{
+  const updateRoom = catchAsyncFunc(async (req,resp)=>{
 const id = req.params.id;
 const updated = await roomsbooked.findByIdAndUpdate(id,req.body,{
     new:true,
     runValidators:true
 });
+if(!updated){
+    //create an error object
+    return next(new Apperror(`cant find room with id ${id}`,404));
+}
 resp.status(200).json({
     status:"successfully updated",
     message:updated
 })
 console.log(updated)
-    }catch(err){
-      resp.status(404).json({
-        status:"error",
-        err
-             })
-    }
-  }
-  
-  const deleteRoom = async (req,resp)=>{
-      try{
+  })
+
+  const deleteRoom =  catchAsyncFunc(async (req,resp)=>{
         const id = req.params.id;
-        await roomsbooked.findByIdAndDelete(id)
+      const deletedroom =  await roomsbooked.findByIdAndDelete(id)
+      if(!deletedroom){
+        //create an error object
+        return next(new Apperror(`cant find room with id ${id}`,404));
+    }
         resp.status(200).json({
         status:"deleted succfully",
         data:null
         })
-      }catch(err){
-        resp.status(404).json({
-            status:" not deleted try again",
-           err:err.message
-            })
-      }
-
-}
+})
 
 module.exports = {
     getRoomsbooked,

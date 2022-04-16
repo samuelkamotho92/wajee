@@ -14,6 +14,10 @@ rating:{
 price:{
     type:Number,
     default:1000
+},
+createdAt:{
+    type:Date,
+    default: Date.now()
 }
 })
 
