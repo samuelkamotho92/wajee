@@ -9,7 +9,6 @@ this.querystring = querystring
     const shallowQuery = { ...this.querystring };
         const specialQuery = ["sort","page","limit"];
     specialQuery.forEach(el=> delete shallowQuery[el]);
-        console.log(req.query,shallowQuery);
         //advances filtering 
         let queryString = JSON.stringify(shallowQuery);
        queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g,match=>`$${match}`);
@@ -35,7 +34,7 @@ this.querystring = querystring
         return this
     }
     pagination(){
-        const page = this.querystring.page * 1 || 1;
+const page = this.querystring.page * 1 || 1;
 const limit = this.querystring.limit * 1 || 100;
 const skipped = (page-1) * limit;
 this.queryData = this.queryData.skip(skipped).limit(limit);
