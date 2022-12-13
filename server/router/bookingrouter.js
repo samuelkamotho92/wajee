@@ -16,7 +16,10 @@ bookrouter.route('/')
 bookrouter.route('/:roomid')
 .get(roomsbooked.getaRoom)
 .patch(roomsbooked.updateRoom)
-.delete(roomsbooked.deleteRoom)
+.delete(
+    authcontroler.protectRoutes,
+    authcontroler.restrict('admin'),
+     roomsbooked.deleteRoom)
 
 
 

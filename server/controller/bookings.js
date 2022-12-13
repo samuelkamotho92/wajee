@@ -76,7 +76,7 @@ console.log(updated)
         return next(new Apperror(`cant find room with id ${roomid}`,404));
     }
         resp.status(200).json({
-        status:"deleted succfully",
+        status:"deleted succefully",
         data:null
         })
 })
