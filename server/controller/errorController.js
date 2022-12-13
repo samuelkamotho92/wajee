@@ -1,3 +1,4 @@
+const AppError = require('../utility/appError')
 const Apperror = require('../utility/appError')
 
 const handleErrors = (err)=>{
@@ -17,6 +18,14 @@ const handleInvalidinput = (err)=>{
     const errors = Object.values(err.errors).map(el => el.message)
     const message =  `Invalid input value ${errors.join('. ')}`;
     return new Apperror(message,400);
+}
+
+const handleInvalidToken = (err)=>{
+  return new AppError('invalid token ,login again',401)
+}
+
+const handleExpiredToken = ()=>{
+    return new AppError("Expired Token,login again",401)
 }
 
 const sendErrorProd = (err,resp)=>{
@@ -59,6 +68,8 @@ sendErrorDev(err,resp)
     if(err.name === 'CastError') error = handleErrors(error)
     if(err.code === 11000) error = handDuplicateError(error)
     if(err.name === "ValidationError") error = handleInvalidinput(error)
+    if(err.name === "JsonWebTokenError") error = handleInvalidToken(error)
+    if(err.name === 'TokenExpiredError') error = handleExpiredToken(error)
 sendErrorProd(error,resp)
 }
     }

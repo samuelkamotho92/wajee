@@ -13,6 +13,7 @@ next()
 //call the catchAsyncfunc to catch the error
 const getRoomsbooked = catchAsyncFunc(async (req,resp,next)=>{
 const queryString = req.query
+// console.log(req.headers.cookie)
 console.log(queryString)
    const features = new Queryoperetions(roomsbooked.find(),queryString)
    .filter()
@@ -107,6 +108,8 @@ const getRoomsStat = catchAsyncFunc(async(req,resp,next)=>{
     })
 })
 
+
+
 module.exports = {
     getRoomsbooked,
     postRoom,
@@ -114,5 +117,5 @@ module.exports = {
     updateRoom,
     deleteRoom,
     gettopRooms,
-    getRoomsStat
+    getRoomsStat,
 };

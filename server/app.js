@@ -16,6 +16,7 @@ app.use("/api/v1/bookings",bookings);
 app.use("/api/v1/user",authentication);
 app.get('/',(req,resp)=>{
   resp.render('index')
+  console.log(req.headers)
 })
 app.all('*',(req,resp,next)=>{
     //create an error object
