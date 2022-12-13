@@ -40,7 +40,8 @@ const AuthSchema = new Schema({
     required:[true,'please enter your role'],
     enum:["admin","user"],
     default:"user"
-   }
+   },
+   passwordChangedAt:Date
 })
 
 AuthSchema.pre('save',async function(next) {
@@ -62,6 +63,14 @@ AuthSchema.statics.login = async function (email,password) {
     }
   }
 
+
+  AuthSchema.methods.changePasswordAfter = async function (timestamp) {
+if(this.passwordChangedAt){
+    const changeTimestamp = parseInt(this.passwordChangedAt.getTime()/1000,10)
+    return timestamp < changeTimestamp
+}
+    return false
+  }
 
 const Authmodel = mongoose.model('User',AuthSchema);
 module.exports = Authmodel

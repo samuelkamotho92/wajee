@@ -73,6 +73,11 @@ if(!userExist){
     return next(new AppError("User does not exist",401))
 }
 console.log(userExist)
+
+if(userExist.changePasswordAfter(decoded.iat)){
+    return next(new AppError("user changed password recently"));
+}
+req.user = userExist
     next()
 })
 
