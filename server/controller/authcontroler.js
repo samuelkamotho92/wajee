@@ -11,9 +11,19 @@ const crypto = require('crypto');
 let maxAge = 30*24*60*60
 const createJWT = (id)=>{
 return jwt.sign({id},process.env.JWT_SECRET,{
-expiresIn:maxAge
+expiresIn:process.env.JWT_EXPIRES
     })
 }
+
+
+const filterObj = (obj, ...allowedFields) => {
+    const newObj = {};
+    Object.keys(obj).forEach(el => {
+      if (allowedFields.includes(el)) newObj[el] = obj[el];
+    });
+    return newObj;
+  };
+
 
 const signUpUser = catchAsync(async(req,resp,next)=>{
 const signedUpUser = await authmodel.create(req.body);
@@ -31,31 +41,50 @@ token:tk
 
 const signInUser = catchAsync(async(req,resp,next)=>{
 const {email,password} = req.body;
+console.log(email,password)
 if(!email || !password){
    return next(new AppError("provide email and password",400));
 }
-const loggedMember = await authmodel.login(email,password);
-if(!loggedMember){
-    return next(new AppError("incorrect password or email",401));
-}
-console.log(loggedMember);
-const id = loggedMember._id;
+const user = await authmodel.findOne({email}).select('+password');
+console.log(user);
+const id = user._id;
 const tk = createJWT(id);
-resp.cookie("Wajee",tk,{httpOnly:true,maxAge: maxAge* 1000});
+resp.cookie("wajee",tk,{httpOnly:true,maxAge: maxAge* 1000});
+const correct = await user.correctPassword(password,user.password)
+if(!user || !correct){
+return next(new AppError("incorrect email or password",401));
+}
 resp.status(200).json({
-    status:'success',
+    status:"success",
     data:{
-        loggedMember
+        user
     },
     token:tk
 })
-resp.status(200).json({
-status:'success',
-data:{
-   loggedMember
-},
-token:tk
-})
+
+// const loggedMember = await authmodel.login(email,password);
+// if(!loggedMember){
+//     return next(new AppError("incorrect password or email",401));
+// }
+// console.log(loggedMember);
+// const id = loggedMember._id;
+// const tk = createJWT(id);
+// resp.cookie("Wajee",tk,{httpOnly:true,maxAge: maxAge* 1000});
+// resp.status(200).json({
+//     status:'success',
+//     data:{
+//         loggedMember
+//     },
+//     token:tk
+// })
+// resp.status(200).json({
+// status:'success',
+// data:{
+//    loggedMember
+// },
+// token:tk
+// })
+next()
 });
 
 const protectRoutes = catchAsyncFunc(async(req,resp,next)=>{
@@ -70,16 +99,18 @@ if(!token){
     return next(new AppError("please login , you are not authorised",401))
 }
 const decoded = await promisify(jwt.verify)(token,process.env.JWT_SECRET)
-let userExist = await authmodel.findById(decoded.id);
-if(!userExist){
+let currentUser = await authmodel.findById(decoded.id);
+if(!currentUser){
     return next(new AppError("User does not exist",401))
 }
-console.log(userExist)
-if(!userExist.changePasswordAfter(decoded.iat)){
-    return next(new AppError("user changed password recently",401));
-}
-req.user = userExist
-console.log(req.user)
+console.log(currentUser)
+if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password! Please log in again.', 401)
+    );
+  }
+req.user = currentUser
+console.log(req.user.role,'user details')
     next()
 })
 
@@ -161,11 +192,73 @@ const resetPassword = catchAsyncFunc(async(req,resp,next)=>{
 next();
 })
 
+const updatedPassword = catchAsyncFunc(async(req,resp,next)=>{
+    console.log(req.user.id,'user id')
+const currentUser = await authmodel.findById(req.user.id).select('+password');
+console.log(currentUser.password)
+// const passwordPassed = currentUser.login(currentUser.email,currentUser.password);
+if(!currentUser.correctPassword(req.body.passwordCurrent,currentUser.password)){
+    return next(new AppError("user does not exist",404))
+}
+currentUser.password = req.body.password;
+currentUser.passwordConfirm = req.body.passwordConfirm;
+await currentUser.save();
+
+const token = createJWT(currentUser._id);
+resp.cookie("wajee",token,{httpOnly:true,maxAge: maxAge* 1000});
+resp.status(200).json({
+    status:'success',
+    data:{
+        currentUser
+    },
+    token:token
+})
+})
+
+const updateme = catchAsyncFunc(async(req,resp,next)=>{
+    if (req.body.password || req.body.passwordConfirm) {
+        return next(
+          new AppError(
+            'This route is not for password updates. Please use /updatePassword.',
+            400
+          )
+        );
+      }
+      const filteredBody = filterObj(req.body, 'firstname', 'lastname' ,'email');
+      const updatedUser = await authmodel.findByIdAndUpdate(req.user.id, filteredBody, {
+        new: true,
+        runValidators: true
+      });
+    
+      resp.status(200).json({
+        status: 'success',
+        data:{
+            updatedUser
+        }
+      });
+
+})
+
+const deleteMe = catchAsyncFunc(async(req,resp,next)=>{
+await authmodel.findByIdAndUpdate(req.user.id,{active:false})
+
+resp.status(204).json({
+    status:'success',
+    data:null
+})
+
+})
+
+
+
 module.exports = {
     signUpUser,
     signInUser,
     protectRoutes,
     restrict,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updatedPassword,
+    updateme,
+    deleteMe
 };

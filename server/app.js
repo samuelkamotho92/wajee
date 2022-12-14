@@ -5,11 +5,26 @@ const bookings =  require("./router/bookingrouter");
 const authentication = require('./router/authrouter');
 const Apperror = require("./utility/appError");
 const globalError = require("./controller/errorController");
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 const app = express();
 app.set('view engine','ejs');
+app.use(helmet());
 if(process.env.NODE_ENV === 'development'){
   app.use(morgan("tiny"));
 }
+const limiter = rateLimit({
+  max:100,
+  windowMs:60*60*1000,
+  message:'Too many accounts created from this IP, please try again after an hour'
+})
+app.use("/api",limiter);
+app.use(mongoSanitize());
+app.use(xss());
+// app.use(hpp());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/v1/bookings",bookings);

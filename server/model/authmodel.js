@@ -24,7 +24,8 @@ const AuthSchema = new Schema({
     password:{
         type:String,
         required:[true,'Please enter your password'],
-        minlength:[8,'please enter a 8 or more charater ']
+        minlength:[8,'please enter a 8 or more charater '],
+        select:false
     },
    passwordConfirm:{
     type:String,
@@ -42,20 +43,44 @@ const AuthSchema = new Schema({
     enum:["admin","user"],
     default:"user"
    },
+   active:{
+    type:Boolean,
+    default:true,
+    select:false
+   },
    passwordChangedAt:Date,
    passwordResetToken:String,
    resetTokenSetAt:Date,
    resetTokenExpires:Date
 })
 
-AuthSchema.pre('save',async function(next) {
-    if(!this.isModified("password") || this.isNew) return next();
-    const salt = await bcrypt.genSalt();
-    this.password = await bcrypt.hash(this.password,salt);
+// AuthSchema.pre('save',async function(next) {
+//     if(!this.isModified("password") || this.isNe) return next();
+//     const salt = await bcrypt.genSalt();
+//     this.password = await bcrypt.hash(this.password,salt);
+//     this.passwordConfirm = undefined;
+//     this.passwordChangedAt = Date.now() - 1000;
+//     next();
+// })
+
+AuthSchema.pre('save', async function(next) {
+    // Only run this function if password was actually modified
+    if (!this.isModified('password')) return next();
+    // Hash the password with cost of 12
+    this.password = await bcrypt.hash(this.password, 12);
+  
+    // Delete passwordConfirm field
     this.passwordConfirm = undefined;
+    next();
+  });
+  
+  AuthSchema.pre('save', function(next) {
+    if (!this.isModified('password') || this.isNew) return next();
+  
     this.passwordChangedAt = Date.now() - 1000;
     next();
-})
+  });
+
 
 AuthSchema.statics.login = async function (email,password) {
     const member = await this.findOne({email}); 
@@ -67,15 +92,31 @@ AuthSchema.statics.login = async function (email,password) {
   }
     }
   }
-AuthSchema.methods.changePasswordAfter = async function (timestamp) {
-    if(this.passwordChangedAt){
-    const changeTimestamp = parseInt(this.passwordChangedAt.getTime()/1000,10)
-    console.log(changeTimestamp,timestamp);
-    return timestamp < changeTimestamp
-}
-    return false
-    
-  }
+
+//   AuthSchema.pre(/^find/, function(next) {
+//     this.find({ active: { $ne: false } });
+//     next();
+//   });
+
+
+  AuthSchema.methods.correctPassword = async function(
+    candidatePassword,
+    userPassword
+  ) {
+    return await bcrypt.compare(candidatePassword, userPassword);
+  };
+
+  AuthSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+    if (this.passwordChangedAt) {
+      const changedTimestamp = parseInt(
+        this.passwordChangedAt.getTime() / 1000,
+        10
+      );
+  
+      return JWTTimestamp < changedTimestamp;
+    }
+    return false;
+  };
 
   AuthSchema.methods.createResetpassToken = async function () {
     const token = crypto.randomBytes(32).toString('hex');
