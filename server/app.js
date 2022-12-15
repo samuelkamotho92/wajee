@@ -1,8 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser")
 const morgan = require("morgan")
-const bookings =  require("./router/bookingrouter");
+const tours =  require("./router/tourRouter");
 const authentication = require('./router/authrouter');
+const reviews = require('./router/reviewsRouter')
 const Apperror = require("./utility/appError");
 const globalError = require("./controller/errorController");
 const rateLimit = require('express-rate-limit');
@@ -27,8 +28,9 @@ app.use(xss());
 // app.use(hpp());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use("/api/v1/bookings",bookings);
+app.use("/api/v1/tours",tours);
 app.use("/api/v1/user",authentication);
+app.use("/api/v1/reviews",reviews);
 app.get('/',(req,resp)=>{
   resp.render('index')
   console.log(req.headers)

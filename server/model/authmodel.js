@@ -40,7 +40,7 @@ const AuthSchema = new Schema({
    role:{
     type:String,
     required:[true,'please enter your role'],
-    enum:["admin","user"],
+    enum:["admin","user","tour-guide"],
     default:"user"
    },
    active:{
@@ -52,7 +52,12 @@ const AuthSchema = new Schema({
    passwordResetToken:String,
    resetTokenSetAt:Date,
    resetTokenExpires:Date
-})
+},
+{
+  toJSON:{virtuals:true},
+  toObject:{virtuals:true}
+}
+)
 
 // AuthSchema.pre('save',async function(next) {
 //     if(!this.isModified("password") || this.isNe) return next();

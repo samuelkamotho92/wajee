@@ -1,21 +1,21 @@
 const { query } = require("express");
-const roomsbooked = require("../model/booking");
+const Tours = require("../model/tour");
 const Queryoperetions = require("../utility/features");
 // const catchAsyncfunc = require("../utility/catchAsync");
 const catchAsyncFunc = require("../utility/catchAsyncFunc");
 const Apperror = require("../utility/appError");
 
-const gettopRooms = catchAsyncFunc(async(req,resp,next)=>{
+const gettopTours = catchAsyncFunc(async(req,resp,next)=>{
 req.query.sort = '-price,-rating';
 req.query.limit = '5';
 next()
 })
 //call the catchAsyncfunc to catch the error
-const getRoomsbooked = catchAsyncFunc(async (req,resp,next)=>{
+const getTours = catchAsyncFunc(async (req,resp,next)=>{
 const queryString = req.query
 // console.log(req.headers.cookie)
 console.log(queryString)
-   const features = new Queryoperetions(roomsbooked.find(),queryString)
+   const features = new Queryoperetions(Tours.find(),queryString)
    .filter()
    .sort()
    .pagination()
@@ -27,9 +27,8 @@ console.log(queryString)
     });
 })
 
-const postRoom = catchAsyncFunc(async (req,resp,next)=>{
-const {name,rating,price} = req.body;
-const booked = await roomsbooked.create(req.body);
+const postTour = catchAsyncFunc(async (req,resp,next)=>{
+const booked = await Tours.create(req.body);
 resp.status(201).json({
     status:"success",
     message:booked
@@ -37,29 +36,29 @@ resp.status(201).json({
 console.log(req.body);
 })
 
-const getaRoom =  catchAsyncFunc(async (req,resp,next)=>{
-    const roomid = req.params.roomid;
-    const oneroom = await roomsbooked.findById(roomid);
-    if(!oneroom){
+const getaTour =  catchAsyncFunc(async (req,resp,next)=>{
+    const tourid = req.params.tourid;
+    const onetour = await Tours.findById(tourid).populate('Reviews');
+    if(!onetour){
         //create an error object
-        return next(new Apperror(`cant find room with id ${roomid}`,404));
+        return next(new Apperror(`cant find room with id ${tourid}`,404));
     }
     resp.status(200).json({
         status:"success",
-        message:oneroom
+        message:onetour
     })
     })
   
 
-  const updateRoom = catchAsyncFunc(async (req,resp,next)=>{
-const roomid = req.params.roomid;
-const updated = await roomsbooked.findByIdAndUpdate(roomid,req.body,{
+  const updateTour = catchAsyncFunc(async (req,resp,next)=>{
+const tourid = req.params.tourid;
+const updated = await Tours.findByIdAndUpdate(tourid,req.body,{
     new:true,
     runValidators:true
 });
 if(!updated){
     //create an error object
-    return next(new Apperror(`cant find room with id ${roomid}`,404));
+    return next(new Apperror(`cant find room with id ${tourid}`,404));
 }
 resp.status(200).json({
     status:"successfully updated",
@@ -68,12 +67,12 @@ resp.status(200).json({
 console.log(updated)
   })
 
-  const deleteRoom =  catchAsyncFunc(async (req,resp,next)=>{
-        const roomid = req.params.roomid;
-      const deletedroom =  await roomsbooked.findByIdAndDelete(roomid)
+  const deleteTour =  catchAsyncFunc(async (req,resp,next)=>{
+        const tourid = req.params.tourid;
+      const deletedroom =  await Tours.findByIdAndDelete(tourid)
       if(!deletedroom){
         //create an error object
-        return next(new Apperror(`cant find room with id ${roomid}`,404));
+        return next(new Apperror(`cant find room with id ${tourid}`,404));
     }
         resp.status(200).json({
         status:"deleted succefully",
@@ -81,8 +80,8 @@ console.log(updated)
         })
 })
 
-const getRoomsStat = catchAsyncFunc(async(req,resp,next)=>{
-    const stats = await roomsbooked.aggregate([
+const getToursStat = catchAsyncFunc(async(req,resp,next)=>{
+    const stats = await Tours.aggregate([
         {
             $match:{rating:{gte:4.5}}
         },
@@ -111,11 +110,11 @@ const getRoomsStat = catchAsyncFunc(async(req,resp,next)=>{
 
 
 module.exports = {
-    getRoomsbooked,
-    postRoom,
-    getaRoom,
-    updateRoom,
-    deleteRoom,
-    gettopRooms,
-    getRoomsStat,
+    getTours,
+    postTour,
+    getaTour,
+    updateTour,
+    deleteTour,
+    gettopTours,
+    getToursStat,
 };

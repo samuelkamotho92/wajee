@@ -5,6 +5,7 @@ const {promisify} = require("util");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const catchAsyncFunc = require('../utility/catchAsyncFunc'); 
+
 const sendEmail = require("../utility/email");
 const crypto = require('crypto');
 //in seconds
