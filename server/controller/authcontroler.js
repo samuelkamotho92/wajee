@@ -16,16 +16,6 @@ expiresIn:process.env.JWT_EXPIRES
     })
 }
 
-
-const filterObj = (obj, ...allowedFields) => {
-    const newObj = {};
-    Object.keys(obj).forEach(el => {
-      if (allowedFields.includes(el)) newObj[el] = obj[el];
-    });
-    return newObj;
-  };
-
-
 const signUpUser = catchAsync(async(req,resp,next)=>{
 const signedUpUser = await authmodel.create(req.body);
 const id = signedUpUser._id;
@@ -62,30 +52,6 @@ resp.status(200).json({
     },
     token:tk
 })
-
-// const loggedMember = await authmodel.login(email,password);
-// if(!loggedMember){
-//     return next(new AppError("incorrect password or email",401));
-// }
-// console.log(loggedMember);
-// const id = loggedMember._id;
-// const tk = createJWT(id);
-// resp.cookie("Wajee",tk,{httpOnly:true,maxAge: maxAge* 1000});
-// resp.status(200).json({
-//     status:'success',
-//     data:{
-//         loggedMember
-//     },
-//     token:tk
-// })
-// resp.status(200).json({
-// status:'success',
-// data:{
-//    loggedMember
-// },
-// token:tk
-// })
-next()
 });
 
 const protectRoutes = catchAsyncFunc(async(req,resp,next)=>{
@@ -216,41 +182,13 @@ resp.status(200).json({
 })
 })
 
-const updateme = catchAsyncFunc(async(req,resp,next)=>{
-    if (req.body.password || req.body.passwordConfirm) {
-        return next(
-          new AppError(
-            'This route is not for password updates. Please use /updatePassword.',
-            400
-          )
-        );
-      }
-      const filteredBody = filterObj(req.body, 'firstname', 'lastname' ,'email');
-      const updatedUser = await authmodel.findByIdAndUpdate(req.user.id, filteredBody, {
-        new: true,
-        runValidators: true
-      });
-    
-      resp.status(200).json({
-        status: 'success',
-        data:{
-            updatedUser
-        }
-      });
 
-})
-
-const deleteMe = catchAsyncFunc(async(req,resp,next)=>{
-await authmodel.findByIdAndUpdate(req.user.id,{active:false})
-
-resp.status(204).json({
-    status:'success',
-    data:null
-})
-
-})
-
-
+const createUser = (req,resp)=>{
+    resp.status(200).json({
+        status:'success',
+        message:'not yet defined use the sign up route'
+    })
+}
 
 module.exports = {
     signUpUser,
@@ -260,6 +198,5 @@ module.exports = {
     forgotPassword,
     resetPassword,
     updatedPassword,
-    updateme,
-    deleteMe
+    createUser
 };

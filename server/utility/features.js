@@ -1,4 +1,4 @@
-class Queryopertaions{
+class Queryoperations{
     //takes in the documents,querysting
     constructor(queryData,querystring){
 this.queryData = queryData;
@@ -42,4 +42,4 @@ return this
     }
 }
 
-module.exports = Queryopertaions;
+module.exports = Queryoperations;
